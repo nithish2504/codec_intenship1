@@ -86,4 +86,20 @@ Contributions are welcome! If you find a bug or have an idea for a new feature (
 📜 License
 This project is open-source and available under the [License Name, e.g., MIT License].
 
-****
+****<img width="916" height="427" alt="image" src="https://github.com/user-attachments/assets/4d8700df-f1b0-4b9d-91e6-c11cdb23e836" />
+<img width="506" height="380" alt="image" src="https://github.com/user-attachments/assets/b961c768-2843-4a7c-86dd-a445fd1c3cd9" />
+<img width="958" height="374" alt="image" src="https://github.com/user-attachments/assets/827afcc5-d042-4c4c-9197-25f13e5e19bf" />
+<img width="952" height="443" alt="image" src="https://github.com/user-attachments/assets/7d2f0893-6d03-49be-ab08-a3b626c0080e" />
+<img width="956" height="398" alt="image" src="https://github.com/user-attachments/assets/20478e86-d49d-4a40-a953-ffc95dd0d27f" />
+<img width="440" height="395" alt="image" src="https://github.com/user-attachments/assets/87f9b72c-e242-4d5e-9188-5f9bc60f8d76" />
+
+
+
+https://github.com/user-attachments/assets/83fb8a6d-bde5-4073-8851-d0c7444421a1
+
+
+
+
+
+
+
