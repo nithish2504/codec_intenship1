@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hcare - Confirm Appointment</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        :root { --primary-color: #007bff; --secondary-color: #28a745; --text-color: #333; --light-bg: #f5f8fb; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+        body { background-color: var(--light-bg); padding: 40px; }
+        .container { max-width: 700px; margin: 0 auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1); }
+        h1 { color: var(--primary-color); text-align: center; margin-bottom: 30px; font-weight: 700; border-bottom: 2px solid #f0f0f0; padding-bottom: 15px; }
+        .details-card { background: #e0f2ff; padding: 25px; border-radius: 8px; margin-bottom: 25px; border-left: 5px solid var(--primary-color); }
+        .details-card p { margin: 10px 0; font-size: 1.05rem; color: var(--text-color); font-weight: 500; }
+        .details-card p i { color: var(--secondary-color); margin-right: 10px; }
+        form { display: flex; flex-direction: column; gap: 15px; }
+        label { font-weight: 600; color: var(--text-color); }
+        textarea { padding: 12px; border: 1px solid #ddd; border-radius: 6px; width: 100%; min-height: 100px; resize: vertical; }
+        button { padding: 15px; margin-top: 20px; background-color: var(--secondary-color); color: white; border: none; border-radius: 6px; font-size: 1.2rem; font-weight: 700; cursor: pointer; transition: background-color 0.2s; }
+        button:hover { background-color: #1e7e34; }
+        .error { color: #dc3545; margin-top: 10px; text-align: center; font-weight: 600; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Finalize Appointment</h1>
+        
+        <div class="details-card">
+            <p><i class="fas fa-user-md"></i> Doctor: <strong id="doc-name">Loading...</strong> (<span id="doc-specialty">...</span>)</p>
+            <p><i class="far fa-calendar-alt"></i> Date: <strong id="app-date">Loading...</strong></p>
+            <p><i class="far fa-clock"></i> Time: <strong id="app-time">Loading...</strong></p>
+            <p><i class="fas fa-hospital"></i> Location: <span id="app-location">Loading...</span></p>
+        </div>
+
+        <form id="finalBookingForm">
+            <label for="reason">Reason for Visit (Required):</label>
+            <textarea id="reason" placeholder="e.g., Routine check-up, persistent headache, follow-up on lab results..." required></textarea>
+
+            <p class="error" id="formError"></p>
+            <button type="submit">Complete Booking</button>
+        </form>
+    </div>
+    
+    <script>
+        const doctorsData = {
+            'doc_priya': { name: 'Dr. Priya Sharma', specialty: 'Cardiology', hospital: 'Apollo Hospitals, Delhi' },
+            'doc_ravi': { name: 'Dr. Ravi Menon', specialty: 'Neurology', hospital: 'Max Healthcare, Mumbai' },
+            'doc_anjali': { name: 'Dr. Anjali Verma', specialty: 'Pediatrics', hospital: 'Cloudnine Clinic, Pune' },
+            'doc_karthik': { name: 'Dr. Karthik Reddy', specialty: 'Dermatology', hospital: 'Fortis Hospital, Chennai' },
+            'doc_suresh': { name: 'Dr. Suresh Iyer', specialty: 'Orthopedics', hospital: 'AIIMS, Bangalore' },
+            'doc_jiya': { name: 'Dr. Jiya Patel', specialty: 'General Medicine', hospital: 'Local Clinic, Ahmedabad' }
+        };
+
+        function getUrlParameter(name) {
+            name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
+            var regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
+            var results = regex.exec(location.search);
+            return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
+        }
+
+        let bookingDetails = {};
+
+        function loadBookingDetails() {
+            const patientName = getUrlParameter('name');
+            const docId = getUrlParameter('docId');
+            const slot = getUrlParameter('slot');
+            
+            if (!docId || !slot || !doctorsData[docId]) {
+                document.getElementById('doc-name').textContent = "Error: Missing appointment details. Please restart booking.";
+                document.getElementById('doc-specialty').textContent = "N/A";
+                document.getElementById('app-location').textContent = "N/A";
+                return;
+            }
+            
+            const doc = doctorsData[docId];
+            const [datePart, timePart] = slot.split(', ');
+
+            bookingDetails = {
+                patient: patientName,
+                doctor: doc.name,
+                specialty: doc.specialty,
+                location: doc.hospital,
+                date: datePart.trim(),
+                time: timePart.trim()
+            };
+            
+            document.getElementById('doc-name').textContent = doc.name;
+            document.getElementById('doc-specialty').textContent = doc.specialty;
+            document.getElementById('app-date').textContent = datePart;
+            document.getElementById('app-time').textContent = timePart;
+            document.getElementById('app-location').textContent = doc.hospital;
+        }
+
+        // Final submission handler
+        document.getElementById('finalBookingForm').addEventListener('submit', function(event) {
+            event.preventDefault(); 
+
+            const reason = document.getElementById('reason').value.trim();
+            const errorDisplay = document.getElementById('formError');
+
+            if (reason === "" || !bookingDetails.doctor) {
+                errorDisplay.textContent = reason === "" ? "Please provide a reason for your visit." : "Error: Booking details are missing.";
+                return;
+            }
+
+            const finalAppointment = {
+                ...bookingDetails,
+                reason: reason,
+                id: Date.now()
+            };
+
+            // 1. Save appointment to localStorage
+            let appointments = JSON.parse(localStorage.getItem('userAppointments')) || [];
+            appointments.push(finalAppointment);
+            localStorage.setItem('userAppointments', JSON.stringify(appointments));
+
+            // 2. Alert
+            alert(`Appointment with ${finalAppointment.doctor} confirmed! You will now be redirected to the dashboard.`);
+            
+            const encodedName = encodeURIComponent(finalAppointment.patient);
+            
+            
+            // 3. Redirect after a small delay to ensure all DOM/localStorage operations complete
+            setTimeout(() => {
+                // **Using the simplest relative path which MUST work if files are in the same folder**
+                // If this fails, the issue is 100% your development server/tool routing.
+                window.location.href = `patient_dashboard.html?name=${encodedName}`;
+                
+                
+                // If the simplest path above FAILS, try this alternative:
+                // window.location.href = `../medico/patient_dashboard.html?name=${encodedName}`; 
+
+            }, 50); // 50 millisecond delay
+
+            
+        });
+
+        // Load details when the page loads
+        document.addEventListener('DOMContentLoaded', loadBookingDetails);
+    </script>
+</body>
+</html>

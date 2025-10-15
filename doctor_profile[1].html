@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hcare - Doctor Profile</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        /* --- General Setup (Reused) --- */
+        :root { --primary-color: #007bff; --secondary-color: #28a745; --danger-color: #dc3545; --text-color: #333; --light-bg: #f5f8fb; --sidebar-bg: #ffffff; --nav-height: 70px; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+        body { background-color: var(--light-bg); min-height: 100vh; }
+        a { text-decoration: none; color: inherit; }
+        .header { height: var(--nav-height); background-color: var(--primary-color); color: white; display: flex; justify-content: space-between; align-items: center; padding: 0 30px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); }
+        .main-content { display: grid; grid-template-columns: 1fr 5fr; min-height: calc(100vh - var(--nav-height)); }
+        .sidebar { background-color: var(--sidebar-bg); padding: 20px 0; border-right: 1px solid #ddd; box-shadow: 2px 0 5px rgba(0, 0, 0, 0.05); display: flex; flex-direction: column; justify-content: space-between; }
+        .profile-box { text-align: center; padding: 15px 10px 30px; margin-bottom: 20px; border-bottom: 1px solid #e0e0e0; }
+        .profile-image { width: 80px; height: 80px; border-radius: 50%; border: 3px solid var(--primary-color); color: var(--primary-color); display: inline-flex; justify-content: center; align-items: center; font-size: 2rem; margin-bottom: 10px; }
+        .profile-name { font-size: 1.2rem; font-weight: 700; color: var(--text-color); margin-top: 5px; margin-bottom: 15px; }
+        #logout-btn { display: block; width: 80%; margin: 0 auto; padding: 10px; border: none; border-radius: 5px; background-color: var(--danger-color); color: white; font-weight: 600; cursor: pointer; transition: background-color 0.2s; }
+        .sidebar-nav a { display: flex; align-items: center; padding: 15px 25px; color: var(--text-color); transition: background-color 0.2s, color 0.2s; border-left: 5px solid transparent; }
+        .sidebar-nav a:hover, .sidebar-nav a.active { background-color: #e0f2ff; color: var(--primary-color); border-left-color: var(--primary-color); }
+        .sidebar-content-wrapper { flex-grow: 1; }
+        .dashboard-area { padding: 30px; overflow-y: auto; }
+
+        /* --- Doctor Profile Specific Styles --- */
+        .doctor-detail-card { background: white; border-radius: 12px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08); padding: 30px; margin-bottom: 30px; }
+        .profile-header { display: flex; align-items: center; border-bottom: 2px solid #f0f0f0; padding-bottom: 20px; margin-bottom: 20px; }
+        .doc-image { width: 150px; height: 150px; border-radius: 50%; overflow: hidden; margin-right: 30px; border: 5px solid var(--secondary-color); }
+        .doc-image img { width: 100%; height: 100%; object-fit: cover; }
+        .doc-summary h1 { color: var(--primary-color); font-size: 2.5rem; margin-bottom: 5px; }
+        .doc-summary .specialty { display: inline-block; background: var(--primary-color); color: white; padding: 5px 15px; border-radius: 20px; font-weight: 600; margin-bottom: 10px; }
+        .doc-summary i { color: var(--secondary-color); margin-right: 8px; }
+        .doc-details-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-bottom: 30px; }
+        .doc-bio h3, .doc-slots h3 { border-left: 4px solid var(--primary-color); padding-left: 10px; margin-bottom: 15px; font-size: 1.5rem; }
+        .time-slots { background: #e0f2ff; padding: 20px; border-radius: 8px; }
+        .day-slots { margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid #cce5ff; }
+        .day-slots h4 { color: var(--primary-color); margin-bottom: 10px; }
+        .slots-grid { display: flex; flex-wrap: wrap; gap: 10px; }
+        .slot-button { padding: 10px 15px; border: 1px solid var(--primary-color); border-radius: 5px; background: white; color: var(--primary-color); cursor: pointer; transition: background 0.2s; font-weight: 600; }
+        .slot-button:hover, .slot-button.selected { background: var(--primary-color); color: white; }
+        #book-confirm-btn { width: 100%; padding: 15px; margin-top: 20px; background-color: var(--secondary-color); color: white; border: none; border-radius: 8px; font-size: 1.2rem; font-weight: 700; cursor: pointer; transition: background 0.2s; }
+        #book-confirm-btn:hover:not(:disabled) { background-color: #1e7e34; }
+        #book-confirm-btn:disabled { background-color: #ccc; cursor: not-allowed; }
+    </style>
+</head>
+<body>
+
+    <header class="header">
+        <div class="header-left">
+            <i class="far fa-calendar-alt"></i> 
+            <span id="current-date-time">Loading...</span>
+        </div>
+        <div class="header-right">
+            <span class="logo">Hcare</span>
+        </div>
+    </header>
+
+    <div class="main-content">
+        
+        <aside class="sidebar">
+            <div class="sidebar-content-wrapper">
+                <div class="profile-box">
+                    <div class="profile-image"><i class="fas fa-user"></i></div>
+                    <div class="profile-name" id="profile-name-display">Hello, Patient</div>
+                    <button id="logout-btn" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
+                </div>
+                <nav class="sidebar-nav">
+                    <a href="#" id="dashboard-link"> <i class="fas fa-th-large"></i> Dashboard </a>
+                    <a href="#" id="view-doctors-link" class="active"> <i class="fas fa-user-md"></i> View Doctors </a>
+                    <a href="booking.html" id="sidebar-book-link"> <i class="fas fa-calendar-plus"></i> Book Appointment </a>
+                    <a href="#"> <i class="fas fa-list-alt"></i> See All Appointments </a>
+                    <a href="#"> <i class="fas fa-history"></i> View History </a>
+                </nav>
+            </div>
+        </aside>
+
+        <main class="dashboard-area">
+            
+            <section class="doctor-detail-card">
+                <div class="profile-header">
+                    <div class="doc-image">
+                        <img id="doc-profile-img" src="" alt="Doctor Profile">
+                    </div>
+                    <div class="doc-summary">
+                        <h1 id="doc-name-display">Doctor Name</h1>
+                        <span class="specialty" id="doc-specialty-display">Specialty</span>
+                        <p><i class="fas fa-hospital"></i> <span id="doc-hospital-display">Hospital, City</span></p>
+                        <p><i class="fas fa-briefcase-medical"></i> <span id="doc-experience-display">Years Experience</span></p>
+                        <p><i class="fas fa-graduation-cap"></i> <span id="doc-qualification-display">MBBS, MD</span></p>
+                        <p><i class="fas fa-star"></i> <span id="doc-rating-display">Rating</span></p>
+                    </div>
+                </div>
+
+                <div class="doc-details-grid">
+                    <div class="doc-bio">
+                        <h3>About the Doctor</h3>
+                        <p id="doc-bio-text">Loading bio...</p>
+                    </div>
+                    <div class="doc-slots">
+                        <h3>Select Time Slot</h3>
+                        <div class="time-slots" id="time-slots-container">
+                            <p style="color: red; text-align: center;">Loading slots...</p>
+                        </div>
+                        <button id="book-confirm-btn" disabled>Confirm Booking</button>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <script>
+        // Doctor Data Store (must match docIds in view_doctors.html)
+        const doctorsData = {
+            'doc_priya': {
+                name: 'Dr. Priya Sharma', specialty: 'Cardiology', hospital: 'Apollo Hospitals, Delhi', exp: '15 Years', qual: 'MBBS, MD (Cardiology)', rating: '4.9', bio: "Dr. Sharma is a leading interventional cardiologist known for her expertise in complex coronary procedures and her compassionate patient care.", img: "https://via.placeholder.com/150/007bff/FFFFFF?text=Dr.P",
+                slots: [
+                    { day: "Today (Oct 14)", times: ["1:00 PM", "2:30 PM"] },
+                    { day: "Tomorrow (Oct 15)", times: ["10:00 AM", "11:30 AM", "4:00 PM"] },
+                    { day: "Thursday (Oct 16)", times: ["9:00 AM", "1:30 PM", "5:00 PM"] }
+                ]
+            },
+            'doc_ravi': {
+                name: 'Dr. Ravi Menon', specialty: 'Neurology', hospital: 'Max Healthcare, Mumbai', exp: '10 Years', qual: 'MBBS, DM (Neurology)', rating: '4.7', bio: "Specializing in headache disorders and stroke rehabilitation. Dr. Menon adopts a holistic approach to neurological wellness.", img: "https://via.placeholder.com/150/28a745/FFFFFF?text=Dr.R",
+                slots: [
+                    { day: "Tomorrow (Oct 15)", times: ["2:00 PM", "3:30 PM"] },
+                    { day: "Friday (Oct 17)", times: ["10:00 AM", "12:00 PM", "4:30 PM"] }
+                ]
+            },
+            'doc_anjali': { name: 'Dr. Anjali Verma', specialty: 'Pediatrics', hospital: 'Cloudnine Clinic, Pune', exp: '8 Years', qual: 'MBBS, MD (Peds)', rating: '5.0', bio: "A trusted name for child health in Pune. Focuses on preventative care and developmental milestones.", img: "https://via.placeholder.com/150/ffc107/333333?text=Dr.A", slots: [{ day: "Thursday (Oct 16)", times: ["9:00 AM", "11:00 AM"] }] },
+            'doc_karthik': { name: 'Dr. Karthik Reddy', specialty: 'Dermatology', hospital: 'Fortis Hospital, Chennai', exp: '12 Years', qual: 'MBBS, MD (Derm)', rating: '4.6', bio: "Specializing in aesthetic and medical dermatology with a focus on laser treatments and complex skin conditions.", img: "https://via.placeholder.com/150/dc3545/FFFFFF?text=Dr.K", slots: [{ day: "Friday (Oct 17)", times: ["10:00 AM", "3:00 PM"] }] },
+            'doc_suresh': { name: 'Dr. Suresh Iyer', specialty: 'Orthopedics', hospital: 'AIIMS, Bangalore', exp: '20 Years', qual: 'MBBS, MS (Ortho)', rating: '4.8', bio: "Veteran orthopedic surgeon with vast experience in joint replacement and trauma surgery.", img: "https://via.placeholder.com/150/6c757d/FFFFFF?text=Dr.S", slots: [{ day: "Friday (Oct 17)", times: ["11:00 AM", "1:00 PM"] }] },
+            'doc_jiya': { name: 'Dr. Jiya Patel', specialty: 'General Medicine', hospital: 'Local Clinic, Ahmedabad', exp: '7 Years', qual: 'MBBS, DNB (Gen Med)', rating: '4.5', bio: "Highly-rated general practitioner providing comprehensive primary care for the whole family.", img: "https://via.placeholder.com/150/17a2b8/FFFFFF?text=Dr.J", slots: [{ day: "Tomorrow (Oct 15)", times: ["10:30 AM", "1:30 PM"] }] }
+        };
+
+        let selectedSlot = null;
+        let currentDoctor = null;
+        let currentDocId = null; // Store the current doctor ID
+        let patientName = "Patient";
+
+        // Helper functions (reused)
+        function getUrlParameter(name) {
+            name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
+            var regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
+            var results = regex.exec(location.search);
+            return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
+        }
+
+        function logout() {
+            window.location.href = 'patient_login_register.html'; 
+        }
+        
+        function updateDateTime() {
+            const now = new Date();
+            const dateOptions = { weekday: 'long', year: 'numeric', month: 'short', day: 'numeric' };
+            const timeOptions = { hour: '2-digit', minute: '2-digit', hour12: true };
+            const dateStr = now.toLocaleDateString('en-IN', dateOptions);
+            document.getElementById('current-date-time').textContent = `${dateStr} | ${now.toLocaleTimeString('en-IN', timeOptions)}`;
+        }
+        
+        // --- Core Functions ---
+
+        function personalizeSidebarAndLinks(patientName) {
+            const encodedName = encodeURIComponent(patientName);
+            document.getElementById('profile-name-display').textContent = `Hello, ${patientName}`;
+            
+            document.getElementById('dashboard-link').href = `patient_dashbord.html?name=${encodedName}`; // Corrected dashboard link
+            document.getElementById('view-doctors-link').href = `view_doctors.html?name=${encodedName}`;
+            document.getElementById('sidebar-book-link').href = `booking.html?name=${encodedName}`; // Updated link
+        }
+        
+        function loadDoctorProfile() {
+            const docId = getUrlParameter('docId');
+            patientName = getUrlParameter('name') || "Patient";
+
+            personalizeSidebarAndLinks(patientName);
+
+            const doc = doctorsData[docId];
+            if (!doc) { 
+                document.getElementById('doc-name-display').textContent = 'Doctor Not Found';
+                return;
+            }
+
+            currentDoctor = doc;
+            currentDocId = docId; // Save the ID
+
+            document.getElementById('doc-profile-img').src = doc.img;
+            document.getElementById('doc-name-display').textContent = doc.name;
+            document.getElementById('doc-specialty-display').textContent = doc.specialty;
+            document.getElementById('doc-hospital-display').textContent = doc.hospital;
+            document.getElementById('doc-experience-display').textContent = doc.exp;
+            document.getElementById('doc-qualification-display').textContent = doc.qual;
+            document.getElementById('doc-rating-display').textContent = `${doc.rating} Stars`;
+            document.getElementById('doc-bio-text').textContent = doc.bio;
+
+            renderSlots(doc.slots);
+        }
+
+        function renderSlots(slots) {
+            const container = document.getElementById('time-slots-container');
+            container.innerHTML = '';
+            
+            slots.forEach((daySlot) => {
+                let dayHtml = `<div class="day-slots"><h4>${daySlot.day}</h4><div class="slots-grid">`;
+                
+                daySlot.times.forEach(time => {
+                    const slotValue = `${daySlot.day}, ${time}`;
+                    dayHtml += `<button class="slot-button" data-slot-value="${slotValue}">${time}</button>`;
+                });
+                
+                dayHtml += `</div></div>`;
+                container.insertAdjacentHTML('beforeend', dayHtml);
+            });
+
+            document.querySelectorAll('.slot-button').forEach(button => {
+                button.addEventListener('click', selectSlot);
+            });
+        }
+
+        function selectSlot(event) {
+            const clickedButton = event.target;
+            const confirmBtn = document.getElementById('book-confirm-btn');
+
+            if (selectedSlot) {
+                // Check if the selected slot element still exists before trying to remove class
+                const prevSelected = document.querySelector(`.slot-button[data-slot-value="${selectedSlot}"]`);
+                if (prevSelected) {
+                    prevSelected.classList.remove('selected');
+                }
+            }
+
+            selectedSlot = clickedButton.getAttribute('data-slot-value');
+            clickedButton.classList.add('selected');
+            
+            confirmBtn.disabled = false;
+        }
+
+        function confirmBooking() {
+            if (!selectedSlot || !currentDoctor) return;
+
+            // FIX 1: Redirect to booking.html and pass the necessary details via URL parameters
+            const encodedName = encodeURIComponent(patientName);
+            const encodedDocId = encodeURIComponent(currentDocId); // Pass the ID to get all doctor details on the next page
+            const encodedSlot = encodeURIComponent(selectedSlot);
+
+            window.location.href = `booking.html?name=${encodedName}&docId=${encodedDocId}&slot=${encodedSlot}`;
+        }
+
+        // Initialization
+        document.addEventListener('DOMContentLoaded', () => {
+            updateDateTime();
+            setInterval(updateDateTime, 60000); 
+            loadDoctorProfile();
+            
+            document.getElementById('book-confirm-btn').addEventListener('click', confirmBooking);
+        });
+    </script>
+</body>
+</html>

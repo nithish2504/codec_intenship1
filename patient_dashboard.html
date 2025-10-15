@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hcare - Patient Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    
+    <style>
+        /* --- General Variables & Resets --- */
+        :root { --primary-color: #007bff; --secondary-color: #28a745; --danger-color: #dc3545; --text-color: #333; --light-bg: #f5f8fb; --sidebar-bg: #ffffff; --nav-height: 70px; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+        body { background-color: var(--light-bg); min-height: 100vh; }
+        a { text-decoration: none; color: inherit; }
+        
+        /* --- Header & Layout --- */
+        .header { height: var(--nav-height); background-color: var(--primary-color); color: white; display: flex; justify-content: space-between; align-items: center; padding: 0 30px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); }
+        .main-content { display: grid; grid-template-columns: 1fr 5fr; min-height: calc(100vh - var(--nav-height)); }
+        .dashboard-area { padding: 30px; overflow-y: auto; }
+        .dashboard-area h2 { color: var(--text-color); font-size: 2rem; font-weight: 700; margin-bottom: 20px; }
+
+        /* --- Sidebar --- */
+        .sidebar { background-color: var(--sidebar-bg); padding: 20px 0; border-right: 1px solid #ddd; box-shadow: 2px 0 5px rgba(0, 0, 0, 0.05); display: flex; flex-direction: column; justify-content: space-between; }
+        .profile-box { text-align: center; padding: 15px 10px 30px; margin-bottom: 20px; border-bottom: 1px solid #e0e0e0; }
+        .profile-image { width: 80px; height: 80px; border-radius: 50%; background-color: #e0f2ff; border: 3px solid var(--primary-color); color: var(--primary-color); display: inline-flex; justify-content: center; align-items: center; font-size: 2rem; margin-bottom: 10px; }
+        .profile-name { font-size: 1.2rem; font-weight: 700; color: var(--text-color); margin-top: 5px; margin-bottom: 15px; }
+        #logout-btn { display: block; width: 80%; margin: 0 auto; padding: 10px; border: none; border-radius: 5px; background-color: var(--danger-color); color: white; font-weight: 600; cursor: pointer; transition: background-color 0.2s; }
+        .sidebar-nav a { display: flex; align-items: center; padding: 15px 25px; color: var(--text-color); transition: background-color 0.2s, color 0.2s; border-left: 5px solid transparent; }
+        .sidebar-nav a:hover, .sidebar-nav a.active { background-color: #e0f2ff; color: var(--primary-color); border-left-color: var(--primary-color); }
+        .sidebar-content-wrapper { flex-grow: 1; }
+
+        /* --- Dashboard Cards --- */
+        .dashboard-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 30px; }
+        .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05); }
+        .card-large { grid-column: 1 / span 3; background: white; padding: 25px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05); }
+        .card h3, .card-large h3 { font-size: 1.3rem; font-weight: 600; color: var(--primary-color); margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
+
+        /* --- Appointments List Styling --- */
+        .appointment-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px; }
+        .appointment-card {
+            background: #fff; 
+            border-radius: 8px; 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05); 
+            padding: 15px; 
+            border-left: 5px solid var(--secondary-color);
+        }
+        .appointment-card div:first-child {
+            font-size: 1.1rem; 
+            font-weight: 700; 
+            color: var(--primary-color); 
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <header class="header">
+        <div class="header-left">
+            <i class="far fa-calendar-alt"></i> 
+            <span id="current-date-time">Loading...</span>
+        </div>
+        <div class="header-right">
+            <span class="logo">Hcare</span>
+        </div>
+    </header>
+
+    <div class="main-content">
+        
+        <aside class="sidebar">
+            <div class="sidebar-content-wrapper">
+                <div class="profile-box">
+                    <div class="profile-image"><i class="fas fa-user"></i></div>
+                    <div class="profile-name" id="profile-name-display">Hello, Patient</div>
+                    <button id="logout-btn" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
+                </div>
+
+                <nav class="sidebar-nav">
+                    <a href="#" class="active" id="dashboard-link">
+                        <i class="fas fa-th-large"></i> Dashboard
+                    </a>
+                    <a href="#" id="view-doctors-link">
+                        <i class="fas fa-user-md"></i> View Doctors
+                    </a>
+                    <a href="#">
+                        <i class="fas fa-calendar-plus"></i> Book Appointment
+                    </a>
+                    <a href="#" id="see-all-appointments-link">
+                        <i class="fas fa-list-alt"></i> See All Appointments
+                    </a>
+                    <a href="#">
+                        <i class="fas fa-history"></i> View History
+                    </a>
+                </nav>
+            </div>
+        </aside>
+
+        <main class="dashboard-area">
+            <h2>Patient Overview</h2>
+
+            <div class="dashboard-grid">
+                <div class="card">
+                    <h3>Appointments Today</h3>
+                    <p style="font-size: 2rem; font-weight: 800; color: var(--secondary-color);" id="appointments-today-count">0</p>
+                    <p style="color: #777;">No immediate bookings.</p>
+                </div>
+                <div class="card">
+                    <h3>Total Doctors</h3>
+                    <p style="font-size: 2rem; font-weight: 800; color: var(--primary-color);">6</p>
+                    <p style="color: #777;">Available to book.</p>
+                </div>
+                <div class="card">
+                    <h3>Total Upcoming</h3>
+                    <p style="font-size: 2rem; font-weight: 800; color: #ffc107;" id="total-upcoming-count">0</p>
+                    <p style="color: #777;">Appointments scheduled.</p>
+                </div>
+            </div>
+            
+            <div class="card-large">
+                <h3><i class="fas fa-calendar-check"></i> Upcoming Appointments</h3>
+                <div class="appointment-list" id="upcoming-appointments-list">
+                    <p style="text-align: center; color: #777;">Loading appointments...</p>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <script>
+        // --- Helper Functions ---
+        function getUrlParameter(name) {
+            name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
+            var regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
+            var results = regex.exec(location.search);
+            return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
+        }
+
+        function logout() {
+            window.location.href = 'patient_login_register.html'; 
+        }
+
+        function updateDateTime() {
+            const now = new Date();
+            const dateOptions = { weekday: 'long', year: 'numeric', month: 'short', day: 'numeric' };
+            const timeOptions = { hour: '2-digit', minute: '2-digit', hour12: true };
+            const dateStr = now.toLocaleDateString('en-IN', dateOptions);
+            const timeStr = now.toLocaleTimeString('en-IN', timeOptions);
+            document.getElementById('current-date-time').textContent = `${dateStr} | ${timeStr}`;
+        }
+
+        function personalizeSidebar() {
+            const patientName = getUrlParameter('name') || "Patient";
+            const encodedName = encodeURIComponent(patientName);
+            
+            document.getElementById('profile-name-display').textContent = `Hello, ${patientName}`;
+            
+            // Set hrefs for all relevant navigation links
+            document.querySelectorAll('.sidebar-nav a').forEach(link => {
+                let id = link.id;
+                let baseHref = '';
+
+                // Note: Using 'patient_dashboard.html' as the filename based on your file structure image.
+                if (id === 'dashboard-link') {
+                    baseHref = 'patient_dashboard.html';
+                } else if (id === 'view-doctors-link') {
+                    baseHref = 'view_doctors.html';
+                } else if (id === 'see-all-appointments-link') {
+                    // *** CRITICAL UPDATE: Link to the new page ***
+                    baseHref = 'see_all_appointments.html'; 
+                }
+
+                if (baseHref) {
+                    link.href = `${baseHref}?name=${encodedName}`;
+                }
+            });
+        }
+
+        // Function to load and display appointments
+        function renderAppointments() {
+            const appointmentListContainer = document.getElementById('upcoming-appointments-list');
+            const totalUpcomingCount = document.getElementById('total-upcoming-count');
+            const appointmentsTodayCount = document.getElementById('appointments-today-count');
+
+            const appointments = JSON.parse(localStorage.getItem('userAppointments')) || [];
+
+            if (!appointmentListContainer) return; 
+
+            appointmentListContainer.innerHTML = ''; // Clear existing content
+            
+            const now = new Date();
+            let upcomingApps = [];
+            let todayCount = 0;
+
+            // Filter for upcoming and sort
+            appointments.forEach(app => {
+                const appDate = new Date(`${app.date} ${app.time}`);
+                if (appDate > now) {
+                    upcomingApps.push(app);
+                }
+                
+                // Check for appointments today
+                if (appDate.toDateString() === now.toDateString()) {
+                     todayCount++;
+                }
+            });
+
+            // Update card counts
+            totalUpcomingCount.textContent = upcomingApps.length;
+            appointmentsTodayCount.textContent = todayCount;
+
+
+            if (upcomingApps.length === 0) {
+                appointmentListContainer.innerHTML = '<p style="text-align: center; color: #777; padding: 20px;">You have no upcoming appointments booked. Book one now via "View Doctors"!</p>';
+                return;
+            }
+
+            // Sort appointments by date (newest first)
+            upcomingApps.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+            // Render only the top 3 upcoming appointments for the dashboard view
+            upcomingApps.slice(0, 3).forEach(app => {
+                const appointmentCard = document.createElement('div');
+                appointmentCard.className = 'appointment-card';
+
+                appointmentCard.innerHTML = `
+                    <div>
+                        <i class="fas fa-user-md" style="margin-right: 5px;"></i> ${app.doctor} 
+                        <span style="font-size: 0.9rem; font-weight: 400; color: #777;">(${app.specialty})</span>
+                    </div>
+                    <p style="margin-bottom: 5px;"><i class="fas fa-calendar-alt" style="color: var(--secondary-color);"></i> Date: <strong>${app.date}</strong></p>
+                    <p style="margin-bottom: 5px;"><i class="fas fa-clock" style="color: var(--secondary-color);"></i> Time: <strong>${app.time}</strong></p>
+                    <p style="font-size: 0.9rem; color: #555;"><i class="fas fa-notes-medical" style="color: var(--primary-color);"></i> Reason: ${app.reason}</p>
+                    <p style="font-size: 0.9rem; color: #555;"><i class="fas fa-hospital-alt" style="color: var(--primary-color);"></i> Location: ${app.location}</p>
+                `;
+                
+                appointmentListContainer.appendChild(appointmentCard);
+            });
+        }
+
+
+        // Initialization
+        document.addEventListener('DOMContentLoaded', () => {
+            updateDateTime();
+            setInterval(updateDateTime, 60000); 
+            personalizeSidebar();
+            renderAppointments(); 
+        });
+    </script>
+</body>
+</html>

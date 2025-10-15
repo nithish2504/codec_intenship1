@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hcare - All Appointments</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    
+    <style>
+        /* --- General Styles (Same as dashboard for consistency) --- */
+        :root { --primary-color: #007bff; --secondary-color: #28a745; --danger-color: #dc3545; --text-color: #333; --light-bg: #f5f8fb; --sidebar-bg: #ffffff; --nav-height: 70px; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+        body { background-color: var(--light-bg); min-height: 100vh; }
+        a { text-decoration: none; color: inherit; }
+        
+        .header { height: var(--nav-height); background-color: var(--primary-color); color: white; display: flex; justify-content: space-between; align-items: center; padding: 0 30px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); }
+        .main-content { display: flex; min-height: calc(100vh - var(--nav-height)); }
+        .content-area { padding: 30px; flex-grow: 1; }
+        .content-area h2 { color: var(--text-color); font-size: 2rem; font-weight: 700; margin-bottom: 20px; }
+        
+        /* --- Appointment Sections --- */
+        .appointment-section { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05); margin-bottom: 30px; }
+        .appointment-section h3 { font-size: 1.8rem; font-weight: 700; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #eee; }
+        
+        /* Specific colors for sections */
+        #upcoming-appointments h3 { color: var(--secondary-color); }
+        #past-appointments h3 { color: #6c757d; }
+
+        /* --- Appointment Cards --- */
+        .appointment-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; }
+        .appointment-card {
+            padding: 20px; 
+            border-radius: 10px; 
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            position: relative;
+        }
+
+        /* Upcoming card styling */
+        .upcoming-card { border-left: 6px solid var(--secondary-color); background: #e6ffed; }
+        .upcoming-card div:first-child { color: var(--secondary-color); }
+
+        /* Past card styling */
+        .past-card { border-left: 6px solid #adb5bd; background: #f8f9fa; opacity: 0.8; }
+        .past-card div:first-child { color: #6c757d; }
+
+        .appointment-card div:first-child {
+            font-size: 1.2rem; 
+            font-weight: 700; 
+            margin-bottom: 10px;
+        }
+        .appointment-card p {
+            margin: 5px 0;
+            font-size: 1rem;
+            color: #555;
+        }
+        .appointment-card strong { font-weight: 600; color: var(--text-color); }
+        .appointment-card i { margin-right: 8px; font-size: 0.9em; }
+        
+        .no-appointments { text-align: center; color: #777; padding: 30px; font-style: italic; font-size: 1.1rem; }
+
+        /* --- Sidebar (Reusing the structure from patient_dashboard) --- */
+        .sidebar { width: 250px; background-color: var(--sidebar-bg); padding: 20px 0; border-right: 1px solid #ddd; box-shadow: 2px 0 5px rgba(0, 0, 0, 0.05); }
+        .profile-box { text-align: center; padding: 15px 10px 30px; margin-bottom: 20px; border-bottom: 1px solid #e0e0e0; }
+        .profile-image { width: 80px; height: 80px; border-radius: 50%; background-color: #e0f2ff; border: 3px solid var(--primary-color); color: var(--primary-color); display: inline-flex; justify-content: center; align-items: center; font-size: 2rem; margin-bottom: 10px; }
+        .profile-name { font-size: 1.2rem; font-weight: 700; color: var(--text-color); margin-top: 5px; margin-bottom: 15px; }
+        #logout-btn { display: block; width: 80%; margin: 0 auto; padding: 10px; border: none; border-radius: 5px; background-color: var(--danger-color); color: white; font-weight: 600; cursor: pointer; transition: background-color 0.2s; }
+        .sidebar-nav a { display: flex; align-items: center; padding: 15px 25px; color: var(--text-color); transition: background-color 0.2s, color 0.2s; border-left: 5px solid transparent; }
+        .sidebar-nav a:hover, .sidebar-nav a.active { background-color: #e0f2ff; color: var(--primary-color); border-left-color: var(--primary-color); }
+
+    </style>
+</head>
+<body>
+
+    <header class="header">
+        <div class="header-left">
+            <i class="far fa-calendar-alt"></i> 
+            <span id="current-date-time">Loading...</span>
+        </div>
+        <div class="header-right">
+            <span class="logo">Hcare</span>
+        </div>
+    </header>
+
+    <div class="main-content">
+        
+        <aside class="sidebar">
+            <div class="profile-box">
+                <div class="profile-image"><i class="fas fa-user"></i></div>
+                <div class="profile-name" id="profile-name-display">Hello, Patient</div>
+                <button id="logout-btn" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
+            </div>
+
+            <nav class="sidebar-nav">
+                <a href="#" id="dashboard-link">
+                    <i class="fas fa-th-large"></i> Dashboard
+                </a>
+                <a href="#" id="view-doctors-link">
+                    <i class="fas fa-user-md"></i> View Doctors
+                </a>
+                <a href="#">
+                    <i class="fas fa-calendar-plus"></i> Book Appointment
+                </a>
+                <a href="#" class="active" id="see-all-appointments-link">
+                    <i class="fas fa-list-alt"></i> See All Appointments
+                </a>
+                <a href="#">
+                    <i class="fas fa-history"></i> View History
+                </a>
+            </nav>
+        </aside>
+        <main class="content-area">
+            <h2>All Appointments History</h2>
+            
+            <div id="upcoming-appointments" class="appointment-section">
+                <h3><i class="fas fa-calendar-check"></i> Upcoming Appointments</h3>
+                <div id="upcoming-list" class="appointment-grid">
+                    <p class="no-appointments">Loading...</p>
+                </div>
+            </div>
+
+            <div id="past-appointments" class="appointment-section">
+                <h3><i class="fas fa-history"></i> Past Appointments</h3>
+                <div id="past-list" class="appointment-grid">
+                    <p class="no-appointments">Loading...</p>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <script>
+        // --- Helper Functions ---
+        function getUrlParameter(name) {
+            name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
+            var regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
+            var results = regex.exec(location.search);
+            return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
+        }
+
+        function updateDateTime() {
+            const now = new Date();
+            const dateOptions = { weekday: 'long', year: 'numeric', month: 'short', day: 'numeric' };
+            const timeOptions = { hour: '2-digit', minute: '2-digit', hour12: true };
+            const dateStr = now.toLocaleDateString('en-IN', dateOptions);
+            const timeStr = now.toLocaleTimeString('en-IN', timeOptions);
+            document.getElementById('current-date-time').textContent = `${dateStr} | ${timeStr}`;
+        }
+        
+        function logout() {
+            window.location.href = 'patient_login_register.html'; 
+        }
+
+        function personalizeSidebar() {
+            const patientName = getUrlParameter('name') || "Patient";
+            const encodedName = encodeURIComponent(patientName);
+            
+            document.getElementById('profile-name-display').textContent = `Hello, ${patientName}`;
+            
+            // Set link hrefs using the correct filename from your structure
+            const dashboardLink = document.getElementById('dashboard-link');
+            const viewDoctorsLink = document.getElementById('view-doctors-link');
+            const seeAllLink = document.getElementById('see-all-appointments-link');
+            
+            if (dashboardLink) dashboardLink.href = `patient_dashboard.html?name=${encodedName}`;
+            if (viewDoctorsLink) viewDoctorsLink.href = `view_doctors.html?name=${encodedName}`;
+            if (seeAllLink) seeAllLink.href = `see_all_appointments.html?name=${encodedName}`;
+        }
+
+
+        // --- CORE FUNCTION: Load, Filter, and Render Appointments ---
+        function renderAllAppointments() {
+            const upcomingList = document.getElementById('upcoming-list');
+            const pastList = document.getElementById('past-list');
+            
+            // 1. Retrieve data
+            const appointments = JSON.parse(localStorage.getItem('userAppointments')) || [];
+            
+            // Clear existing content
+            upcomingList.innerHTML = '';
+            pastList.innerHTML = '';
+            
+            if (appointments.length === 0) {
+                upcomingList.innerHTML = '<p class="no-appointments">You have not booked any appointments yet. Use the "Book Appointment" link!</p>';
+                pastList.innerHTML = '<p class="no-appointments">No past appointments found.</p>';
+                return;
+            }
+
+            const now = new Date();
+            let upcomingCount = 0;
+            let pastCount = 0;
+
+            // 2. Sort all appointments by date (chronological order)
+            appointments.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+            appointments.forEach(app => {
+                // Combine date and time string to create a comparable Date object
+                const appointmentDateTime = new Date(`${app.date} ${app.time}`); 
+                
+                const isUpcoming = appointmentDateTime > now;
+                
+                const card = document.createElement('div');
+                card.className = 'appointment-card ' + (isUpcoming ? 'upcoming-card' : 'past-card');
+                
+                card.innerHTML = `
+                    <div>
+                        <i class="fas fa-user-md" style="margin-right: 5px;"></i> ${app.doctor} 
+                        <span style="font-size: 0.9rem; font-weight: 400; color: #777;">(${app.specialty})</span>
+                    </div>
+                    <p><i class="fas fa-calendar-alt"></i> Date: <strong>${app.date}</strong></p>
+                    <p><i class="fas fa-clock"></i> Time: <strong>${app.time}</strong></p>
+                    <p><i class="fas fa-hospital-alt"></i> Location: <strong>${app.location}</strong></p>
+                    <p style="font-size: 0.95rem; color: #555;"><i class="fas fa-notes-medical"></i> Reason: ${app.reason}</p>
+                `;
+                
+                // 3. Append to the correct section
+                if (isUpcoming) {
+                    upcomingList.appendChild(card);
+                    upcomingCount++;
+                } else {
+                    pastList.appendChild(card);
+                    pastCount++;
+                }
+            });
+
+            // 4. Update the "No Appointments" messages if lists are empty
+            if (upcomingCount === 0) {
+                upcomingList.innerHTML = '<p class="no-appointments">No upcoming appointments scheduled.</p>';
+            }
+            if (pastCount === 0) {
+                pastList.innerHTML = '<p class="no-appointments">No completed or past appointments found.</p>';
+            }
+        }
+
+
+        // Initialization
+        document.addEventListener('DOMContentLoaded', () => {
+            updateDateTime();
+            setInterval(updateDateTime, 60000); 
+            personalizeSidebar();
+            renderAllAppointments(); 
+        });
+    </script>
+</body>
+</html>
